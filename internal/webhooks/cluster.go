@@ -207,6 +207,11 @@ func (webhook *Cluster) validate(ctx context.Context, oldCluster, newCluster *cl
 }
 
 func (webhook *Cluster) validateTopology(ctx context.Context, oldCluster, newCluster *clusterv1.Cluster, fldPath *field.Path) field.ErrorList {
+	deleting := newCluster.GetDeletionTimestamp() != nil && !newCluster.GetDeletionTimestamp().IsZero()
+	if deleting {
+		return nil
+	}
+
 	// NOTE: ClusterClass and managed topologies are behind ClusterTopology feature gate flag; the web hook
 	// must prevent the usage of Cluster.Topology in case the feature flag is disabled.
 	if !feature.Gates.Enabled(feature.ClusterTopology) {

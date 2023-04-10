@@ -39,6 +39,7 @@ type ClusterBuilder struct {
 	name                  string
 	labels                map[string]string
 	annotations           map[string]string
+	deletionTimestamp     *metav1.Time
 	topology              *clusterv1.Topology
 	infrastructureCluster *unstructured.Unstructured
 	controlPlane          *unstructured.Unstructured
@@ -71,6 +72,12 @@ func (c *ClusterBuilder) WithAnnotations(annotations map[string]string) *Cluster
 	return c
 }
 
+// WithDeletionTimestamp sets the deletionTimestamp for the ClusterBuilder.
+func (c *ClusterBuilder) WithDeletionTimestamp(deletionTimestamp *metav1.Time) *ClusterBuilder {
+	c.deletionTimestamp = deletionTimestamp
+	return c
+}
+
 // WithInfrastructureCluster adds the passed InfrastructureCluster to the ClusterBuilder.
 func (c *ClusterBuilder) WithInfrastructureCluster(t *unstructured.Unstructured) *ClusterBuilder {
 	c.infrastructureCluster = t
@@ -97,10 +104,11 @@ func (c *ClusterBuilder) Build() *clusterv1.Cluster {
 			APIVersion: clusterv1.GroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        c.name,
-			Namespace:   c.namespace,
-			Labels:      c.labels,
-			Annotations: c.annotations,
+			Name:              c.name,
+			Namespace:         c.namespace,
+			Labels:            c.labels,
+			Annotations:       c.annotations,
+			DeletionTimestamp: c.deletionTimestamp,
 		},
 		Spec: clusterv1.ClusterSpec{
 			Topology:       c.topology,

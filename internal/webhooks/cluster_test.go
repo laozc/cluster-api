@@ -595,6 +595,7 @@ func TestClusterValidation(t *testing.T) {
 	// NOTE: ClusterTopology feature flag is disabled by default, thus preventing to set Cluster.Topologies.
 
 	var (
+		now   = metav1.Now()
 		tests = []struct {
 			name      string
 			in        *clusterv1.Cluster
@@ -780,6 +781,23 @@ func TestClusterValidation(t *testing.T) {
 				name:      "error when name contains invalid NonAlphanumeric character",
 				in:        builder.Cluster("fooNamespace", "thisNameContainsInvalid!@NonAlphanumerics").Build(),
 				expectErr: true,
+			},
+			{
+				name:      "should pass when the object is deleting with ClusterTopology given and feature disabled",
+				expectErr: false,
+				old: builder.Cluster("fooboo", "cluster1").
+					WithTopology(builder.ClusterTopology().
+						WithClass("foo").
+						WithVersion("v1.2.3").
+						Build()).
+					Build(),
+				in: builder.Cluster("fooboo", "cluster1").
+					WithTopology(builder.ClusterTopology().
+						WithClass("foo").
+						WithVersion("v1.2.3").
+						Build()).
+					WithDeletionTimestamp(&now).
+					Build(),
 			},
 		}
 	)
